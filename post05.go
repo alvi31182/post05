@@ -182,7 +182,7 @@ func UpdateUser(d Userdata) error {
 
 	userId := exists(d.Username)
 	if userId != -1 {
-		return errors.New("User does not exist!")
+		return errors.New("User does not exist")
 	}
 
 	d.ID = userId
