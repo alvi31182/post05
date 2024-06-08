@@ -120,4 +120,77 @@ func deleteUser(id int) error {
 	if exists(username) != id {
 		return fmt.Errorf("User with ID %d does not exist", id)
 	}
+
+	deleteStatement := `delete from "userdata" where userid=$1`
+	_, err = db.Exec(deleteStatement, id)
+	if err != nil {
+		return err
+	}
+
+	deleteStatement = `delete from "users" where id=$1`
+	_, err = db.Exec(deleteStatement, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ListUsers() ([]Userdata, error) {
+	Data := []Userdata{}
+	db, err := openConnection()
+	if err != nil {
+		return Data, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(`SELECT "id", "username","surname","description" 
+	FROM users, userdata WHERE users.id = userdata.userid`)
+	if err != nil {
+		return Data, err
+	}
+
+	for rows.Next() {
+		var id int
+		var username string
+		var surname string
+		var name string
+		var description string
+		err = rows.Scan(&id, &username, &name, &surname, &description)
+		temp := Userdata{
+			ID:          id,
+			Username:    username,
+			Name:        name,
+			Surname:     surname,
+			Description: description,
+		}
+
+		Data = append(Data, temp)
+		if err != nil {
+			return Data, err
+		}
+	}
+	defer rows.Close()
+	return Data, nil
+}
+
+func UpdateUser(d Userdata) error {
+	db, err := openConnection()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	userId := exists(d.Username)
+	if userId != -1 {
+		return errors.New("User does not exist!")
+	}
+
+	d.ID = userId
+	updateStatement := `UPDATE "userdata" SET "name="$1, "surname="$2, "description"=$3 WHERE "userid"=$4`
+	_, err = db.Exec(updateStatement, d.Name, d.Surname, d.Description, d.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
