@@ -59,3 +59,50 @@ func exists(username string) int {
 	defer rows.Close()
 	return userid
 }
+
+func Adduser(data Userdata) int {
+	data.Username = strings.ToLower(data.Username)
+	db, err := openConnection()
+	if err != nil {
+		return -1
+	}
+	defer db.Close()
+
+	userId := exists(data.Username)
+	if userId != -1 {
+		fmt.Println("User already exists:", Username)
+		return userId
+	}
+
+	insertStatement := `insert into "users" ("username") values ($1)`
+
+	_, err = db.Exec(insertStatement, data.Username)
+
+	if err != nil {
+		fmt.Println(err)
+		return -1
+	}
+
+	userId = exists(data.Username)
+	if userId == -1 {
+		fmt.Println("Failed to add user:", data.Username)
+		return userId
+	}
+
+	insertStatement = `insert into "userdata" ("userid", "name", "surname", "description") values ($1, $2, $3, $4)`
+	_, err = db.Exec(insertStatement, userId, data.Name, data.Surname, data.Description)
+	if err != nil {
+		fmt.Println("db.Exec()", err)
+		return -1
+	}
+	return userId
+}
+
+func deleteUser(id int) error {
+	db, err := openConnection()
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+}
