@@ -35,3 +35,27 @@ func openConnection() (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+func exists(username string) int {
+	username = strings.ToLower(username)
+	db, err := openConnection()
+	if err != nil {
+		return -1
+	}
+	defer db.Close()
+
+	userid := -1
+	statement := fmt.Sprintf(`SELECT "id" FROM "users" where username = '%s'`, username)
+	rows, err := db.Query(statement)
+
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			return -1
+		}
+		userid = id
+	}
+	defer rows.Close()
+	return userid
+}
